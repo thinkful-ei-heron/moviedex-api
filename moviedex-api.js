@@ -1,18 +1,29 @@
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
+const helmet = require('helmet');
 const cors = require('cors');
 const movies = require('./movies-data-small');
+const API_TOKEN = process.env.API_KEY;
 
 const app = express();
-app.use(cors());
 app.use(morgan('dev'));
+app.use(helmet());
+app.use(cors());
+
 
 function authorization(req,res, next){
-  if(!req.headers.authorization){
+  let hAuth = req.headers.authorization;
+  if(!hAuth){
     return res.status(400).send('Requires Authorization');
   }
-
+  if(!hAuth.startsWith('Bearer ')) {
+    return res.status(400).send('Requires Bearer Authorization');
+  }
+  let token = hAuth.split(' ')[1];
+  if(token !== API_TOKEN) {
+    return res.status(401).send('Failed Authorization.');
+  }
   next();
 }
 
